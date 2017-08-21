@@ -113,7 +113,8 @@
          } else {
            $current_field['kirbytext'] = $field->kirbytext()->value();
            $current_field['value'] = $field->value();
-           //$current_field['yaml'] = $field->yaml();
+           //Let's try this, might be buggy.
+           $current_field['yaml'] = $field->yaml();
          }
          return $current_field;
        }
