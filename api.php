@@ -41,10 +41,6 @@
        /* !YAML */
        /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-       //Yaml doesn't like '*' characters.
-       //$field->value = str_replace('*','_', $field->value);
-
-
        function fieldisyaml($field)
        {
            try {
@@ -55,8 +51,6 @@
                  if (preg_match("/^[a-z]+$/", key($field->yaml()[0]))) {
                    return true;
                  }
-                 //die(print_r($field->toStructure()->toArray()[4]->toArray()['text']->kirbytext()));
-                 //die(print_r(get_class($field->toStructure()->toArray()[0])));
                }
              }
              return false;
@@ -69,10 +63,13 @@
        /* !YAML Test */
        /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-       function test($A, $B)
+       function canbeyaml($field)
        {
-         die(print_r(key($A->yaml()[0])));
-         //die(print_r($field->kirbytext()));
+         try {
+             return $field->yaml();
+         } catch (Exception $exception) {
+             return false;
+         }
        }
 
        /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -107,14 +104,12 @@
 
        function getfield($field) {
          $current_field = [];
-         //If field is not YAML it's plain content else it's structured content
          if (fieldisyaml($field)) {
            $current_field = getstructure($field);
          } else {
            $current_field['kirbytext'] = $field->kirbytext()->value();
            $current_field['value'] = $field->value();
-           //Let's try this, might be buggy.
-           $current_field['yaml'] = $field->yaml();
+           if(canbeyaml($field)) $current_field['yaml'] = $field->yaml();
          }
          return $current_field;
        }
@@ -181,8 +176,6 @@
        /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
        function extendpage($page, $pageitem) {
-         //Get YAML fields
-         //$pageitem->content = getfields($page);
          //If files get files
          $pageitem->files = ($page->hasFiles()) ? getfiles($page) : false;
          //Return page array
@@ -236,13 +229,12 @@
          endif;
 
          //Extend page item
-         if(get('path')==(string)$page->uri()):
+         if(get('path')==(string)$page->uri() || get('full')):
            $pageitem = extendpage($page, $pageitem);
            $pageitem->extended = true;
          else:
            $pageitem->extended = false;
          endif;
-
 
          //Return page array
          return $pageitem;
@@ -263,6 +255,7 @@
            $fileitems[$file->filename()]['index'] = (string)$index;
            $fileitems[$file->filename()]['name'] = (string)$file->name();
            $fileitems[$file->filename()]['type'] = (string)$file->type();
+           $fileitems[$file->filename()]['extension'] = (string)$file->extension();
            $fileitems[$file->filename()]['files'][$file->extension()] = (string)$file->url();
            $fileitems[$file->filename()][$file->type()] = (string)$file->url();
            $fileitems[$file->filename()]['orientation'] = (string)$file->orientation();
@@ -310,7 +303,4 @@
        $json->intime = $after - $before;
        return new Response(json_encode($json), 'json');
 
-     }
-     )
-     )
-   );
+})));
