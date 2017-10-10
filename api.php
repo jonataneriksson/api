@@ -293,10 +293,14 @@
          $json->site = getsite();
          $json->pages = getpages(site()->pages());
        elseif(get('path')):
-         $json->page = getpage(site()->pages()->findByURI(get('path')));
-       else:
-         //TODO: Cover is not an universal frontpage
-         $json->page = getpage(site()->pages()->find('cover'));
+         if($page = site()->pages()->findByURI(get('path'))):
+           $json->page = getpage($page);
+         endif;
+       elseif(get('structure')):
+        $home = c::get('home');
+        if($page = site()->pages()->find($home)):
+           $json->page = getpage($page);
+        endif;
        endif;
 
        $after = microtime(true);
