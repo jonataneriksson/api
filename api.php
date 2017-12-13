@@ -18,7 +18,6 @@ array(
 
       //Some metadata
       $before = microtime(true);
-      $language = get('language') ? get('language') : 'en';
 
       /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
       /* !Test String */
@@ -132,13 +131,13 @@ array(
 
       function getsite()
       {
-        global $language;
         $siteobject = site()->pages()->page()->site();
         $siteitem = (object) '';
         $siteitem->url = $siteobject->url();
-        $siteitem->strings = (array)$siteobject->content($language)->toArray();
+        $siteitem->language = get('language');
+        $siteitem->strings = (array)$siteobject->content(get('language'))->toArray();
         $sitecontentitem = [];
-        foreach($siteobject->content($language)->data() as $field):
+        foreach($siteobject->content(get('language'))->data() as $field):
           $sitecontentitem[$field->key()] = getfield($field);
         endforeach;
         $siteitem->content = $sitecontentitem;
@@ -189,7 +188,6 @@ array(
 
         //Let's make the return object
         $pageitem = (object) '';
-        global $language;
 
         //Get structured fields
         if(get('path')== $page ? (string)$page->uri() : '/'):
@@ -197,7 +195,7 @@ array(
         endif;
 
         //Get strings only.
-        $pageitem->strings = (array)$page->content($language)->toArray();
+        $pageitem->strings = (array)$page->content(get('language'))->toArray();
         $pageitem->language = (string)$page->content()->language();
         $pageitem->uri = (string)$page->uri();
         $pageitem->index = $index;
@@ -246,7 +244,6 @@ array(
       function getfiles($page) {
 
         $index = 0;
-        global $language;
 
         //Loop through files
         foreach($page->files()->sortBy('sort', 'asc') as $file):
@@ -272,9 +269,9 @@ array(
             $fileitems[$file->filename()]['thumbnails']['still']['h700'] = (string)$file->thumb(['height' => 700, 'clip' => true, 'still' => true])->url();
           endif;
 
-          foreach($file->meta($language)->data() as $key => $value):
-            $fileitems[$file->filename()]['meta'][$key]['kirbytext'] = $file->meta($language)->data()[$key]->kirbytext()->value();
-            $fileitems[$file->filename()]['meta'][$key]['value'] = $file->meta($language)->data()[$key]->value();
+          foreach($file->meta(get('language'))->data() as $key => $value):
+            $fileitems[$file->filename()]['meta'][$key]['kirbytext'] = $file->meta(get('language'))->data()[$key]->kirbytext()->value();
+            $fileitems[$file->filename()]['meta'][$key]['value'] = $file->meta(get('language'))->data()[$key]->value();
           endforeach;
           $index++;
 
