@@ -176,6 +176,7 @@ array(
       function extendpage($page, $pageitem) {
         //If files get files
         $pageitem->files = ($page->hasFiles()) ? getfiles($page) : false;
+        $pageitem->content = getfields($page);
         //Return page array
         return $pageitem;
       }
@@ -189,36 +190,36 @@ array(
         //Let's make the return object
         $pageitem = (object) '';
 
-        //Get structured fields
-        if(get('path')== $page ? (string)$page->uri() : '/'):
-          $pageitem->content = getfields($page);
-        endif;
+        //Get the structural IDs
+        $pageitem->uri = (string)$page->uri();
+        $pageitem->url = (string)$page->url();
+        $pageitem->uid = (string)$page->uid();
+        $pageitem->visible = (string)$page->isVisible();
 
         //Get strings only.
-        $pageitem->strings = (array)$page->content(get('language'))->toArray();
         $pageitem->language = (string)$page->content()->language();
-        $pageitem->uri = (string)$page->uri();
+        $pageitem->strings = (array)$page->content(get('language'))->toArray();
+
+        //Other Meta
         $pageitem->index = $index;
         $pageitem->template = (string)$page->intendedTemplate();
-        $pageitem->url = (string)$page->url();
         $pageitem->folder = (string)$page->contentURL();
-        $pageitem->visible = (string)$page->isVisible();
-        $pageitem->uid = (string)$page->uid();
-        $pageitem->parenttitle = (string)$page->parent()->title();
-        $pageitem->parenturl = (string)$page->parent()->url();
-        $pageitem->parentuid = (string)$page->parent()->uid();
 
-        if($next = $page->next()):
+        /*$pageitem->parenttitle = (string)$page->parent()->title();
+        $pageitem->parenturl = (string)$page->parent()->url();
+        $pageitem->parentuid = (string)$page->parent()->uid();*/
+
+        /*if($next = $page->next()):
           $pageitem->nexturi = (string)$next->uri();
           $pageitem->nexttitle = (string)$next->title();
           $pageitem->nexturl = (string)$next->url();
-        endif;
+        endif;*/
 
-        if($prev = $page->prev()):
+        /*if($prev = $page->prev()):
           $pageitem->prevuri = (string)$prev->uri();
           $pageitem->prevtitle = (string)$prev->title();
           $pageitem->prevurl = (string)$prev->url();
-        endif;
+        endif;*/
 
         //Setup children
         if($page->hasChildren() && !get('structure')):
