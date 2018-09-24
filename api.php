@@ -16,6 +16,16 @@ array(
 
       $json = (object)[];
 
+      /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+      /* !If structure is 0 then load the structure */
+      /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+      $loadstructure = !get('structure');
+
+      /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+      /* !If language is used. */
+      /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+      $language = get('language');
+
       //Some metadata
       $before = microtime(true);
 
@@ -108,7 +118,6 @@ array(
         } else {
           $current_field['kirbytext'] = $field->kirbytext()->value();
           $current_field['value'] = $field->value();
-          if(canbeyaml($field)) $current_field['yaml'] = $field->yaml();
         }
         return $current_field;
       }
@@ -135,13 +144,39 @@ array(
         $siteitem = (object) '';
         $siteitem->url = $siteobject->url();
         $siteitem->language = get('language');
-        $siteitem->strings = (array)$siteobject->content(get('language'))->toArray();
+        $siteitem->strings = (array)$siteobject->content($siteitem->language)->toArray();
         $sitecontentitem = [];
-        foreach($siteobject->content(get('language'))->data() as $field):
+        foreach($siteobject->content($siteitem->language)->data() as $field):
           $sitecontentitem[$field->key()] = getfield($field);
         endforeach;
         $siteitem->content = $sitecontentitem;
         return $siteitem;
+      }
+
+      /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+      /* !Get page structure */
+      /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+      function getpagestructures($pages) {
+
+        //Let's make the return array
+        $pageitems = (array)[];
+
+        $index = 0;
+
+        //Loop through pages
+        foreach($pages as $page):
+
+          //Save page data to array
+          $pageitems[$page->uid()] = getpagestructure($page, $index);
+
+          $index++;
+
+        endforeach;
+
+        //Return pages array
+        return $pageitems;
+
       }
 
       /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -151,7 +186,7 @@ array(
       function getpages($pages) {
 
         //Let's make the return array
-        //$pageitems = (array)[];
+        $pageitems = (array)[];
 
         $index = 0;
 
@@ -177,6 +212,41 @@ array(
         //If files get files
         $pageitem->files = ($page->hasFiles()) ? getfiles($page) : false;
         $pageitem->content = getfields($page);
+        $pageitem->strings = (array)$page->content(get('language'))->toArray();
+        $pageitem->template = (string)$page->intendedTemplate();
+        $pageitem->folder = (string)$page->contentURL();
+        $pageitem->extended = true;
+        //Return page array
+        return $pageitem;
+      }
+
+      /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+      /* !Get page */
+      /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+      function getpagestructure($page, $index = 0) {
+
+        //Let's make the return object
+        $pageitem = (object) '';
+        $pageitem->uri = (string)$page->uri();
+        $pageitem->url = (string)$page->url();
+        $pageitem->uid = (string)$page->uid();
+        $pageitem->visible = (string)$page->isVisible();
+
+        //Setup children
+        if($page->hasChildren() && !get('structure')):
+          $pageitem->children = getpagestructures($page->children());
+        endif;
+
+        //Extend page item
+        if(get('path')==(string)$page->uri() || get('full')):
+            $pageitem = extendpage($page, $pageitem);
+        elseif('portfolio'==(string)$page->uri()):
+                $pageitem = extendpage($page, $pageitem);
+        else:
+            $pageitem->extended = false;
+        endif;
+
         //Return page array
         return $pageitem;
       }
@@ -189,37 +259,14 @@ array(
 
         //Let's make the return object
         $pageitem = (object) '';
-
-        //Get the structural IDs
         $pageitem->uri = (string)$page->uri();
         $pageitem->url = (string)$page->url();
         $pageitem->uid = (string)$page->uid();
         $pageitem->visible = (string)$page->isVisible();
 
         //Get strings only.
-        $pageitem->language = (string)$page->content()->language();
+        if(get('language')) $pageitem->language = get('language');
         $pageitem->strings = (array)$page->content(get('language'))->toArray();
-
-        //Other Meta
-        $pageitem->index = $index;
-        $pageitem->template = (string)$page->intendedTemplate();
-        $pageitem->folder = (string)$page->contentURL();
-
-        /*$pageitem->parenttitle = (string)$page->parent()->title();
-        $pageitem->parenturl = (string)$page->parent()->url();
-        $pageitem->parentuid = (string)$page->parent()->uid();*/
-
-        /*if($next = $page->next()):
-          $pageitem->nexturi = (string)$next->uri();
-          $pageitem->nexttitle = (string)$next->title();
-          $pageitem->nexturl = (string)$next->url();
-        endif;*/
-
-        /*if($prev = $page->prev()):
-          $pageitem->prevuri = (string)$prev->uri();
-          $pageitem->prevtitle = (string)$prev->title();
-          $pageitem->prevurl = (string)$prev->url();
-        endif;*/
 
         //Setup children
         if($page->hasChildren() && !get('structure')):
@@ -228,10 +275,12 @@ array(
 
         //Extend page item
         if(get('path')==(string)$page->uri() || get('full')):
-          $pageitem = extendpage($page, $pageitem);
-          $pageitem->extended = true;
+            $pageitem = extendpage($page, $pageitem);
+
+            //Add some meta
+            $pageitem->index = $index;
         else:
-          $pageitem->extended = false;
+            $pageitem->extended = false;
         endif;
 
         //Return page array
@@ -248,34 +297,9 @@ array(
 
         //Loop through files
         foreach($page->files()->sortBy('sort', 'asc') as $file):
-
+          $fileitems[$file->filename()] = getfile($file);
           $fileitems[$file->filename()]['index'] = (string)$index;
-          $fileitems[$file->filename()]['name'] = (string)$file->name();
-          $fileitems[$file->filename()]['type'] = (string)$file->type();
-          $fileitems[$file->filename()]['extension'] = (string)$file->extension();
-          $fileitems[$file->filename()]['files'][$file->extension()] = (string)$file->url();
-          $fileitems[$file->filename()][$file->type()] = (string)$file->url();
-          $fileitems[$file->filename()]['orientation'] = (string)$file->orientation();
-          $fileitems[$file->filename()]['height'] = (string)$file->height();
-          $fileitems[$file->filename()]['width'] = (string)$file->width();
-          $fileitems[$file->filename()]['src'] = (string)$file->url();
-          if($file->type() == 'image'):
-            $fileitems[$file->filename()]['thumbnails']['h350'] = (string)$file->thumb(['height' => 350])->url();
-            $fileitems[$file->filename()]['thumbnails']['h700'] = (string)$file->thumb(['height' => 700])->url();
-            $fileitems[$file->filename()]['thumbnails']['h1000'] = (string)$file->thumb(['height' => 1000])->url();
-            $fileitems[$file->filename()]['ratio'] = (string)round($file->ratio()*100)/100;
-          endif;
-          if($file->type() == 'video'):
-            $fileitems[$file->filename()]['thumbnails']['still']['h350'] = (string)$file->thumb(['height' => 350, 'clip' => true, 'still' => true])->url();
-            $fileitems[$file->filename()]['thumbnails']['still']['h700'] = (string)$file->thumb(['height' => 700, 'clip' => true, 'still' => true])->url();
-          endif;
-
-          foreach($file->meta(get('language'))->data() as $key => $value):
-            $fileitems[$file->filename()]['meta'][$key]['kirbytext'] = $file->meta(get('language'))->data()[$key]->kirbytext()->value();
-            $fileitems[$file->filename()]['meta'][$key]['value'] = $file->meta(get('language'))->data()[$key]->value();
-          endforeach;
           $index++;
-
         endforeach;
 
         //Return file array
@@ -283,21 +307,70 @@ array(
       }
 
       /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+      /* !Get one file */
+      /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+      function getfile($file) {
+
+        $fileitem = [];
+        $fileitem['name'] = (string)$file->name();
+        $fileitem['type'] = (string)$file->type();
+        $fileitem['extension'] = (string)$file->extension();
+        $fileitem['src'] = (string)$file->url();
+
+        if($fileitem['type'] == 'image'):
+          $fileitem['height'] = (string)$file->height();
+          $fileitem['width'] = (string)$file->width();
+          $fileitem['ratio'] = (string)round($file->ratio()*100)/100;
+          $fileitem['orientation'] = (string)$file->orientation();
+          $fileitem['thumbnails'] = getthumbnails($file);
+        endif;
+
+        if($fileitem['type'] == 'video'):
+          $stillfromvideo = $file->thumb(['clip' => true, 'still' => true]);
+          $fileitem['height'] = (string)$stillfromvideo->height();
+          $fileitem['width'] = (string)$stillfromvideo->width();
+          $fileitem['ratio'] = (string)round($stillfromvideo->ratio()*100)/100;
+          $fileitem['orientation'] = (string)$stillfromvideo->orientation();
+          $fileitem['thumbnails'] = getthumbnails($file, ['clip' => true, 'still' => true]);
+        endif;
+
+        foreach($file->meta(get('language'))->data() as $key => $value):
+          $fileitem['meta'][$key]['kirbytext'] = $file->meta(get('language'))->data()[$key]->kirbytext()->value();
+          $fileitem['meta'][$key]['value'] = $file->meta(get('language'))->data()[$key]->value();
+        endforeach;
+
+        return $fileitem;
+      }
+
+      /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+      /* !Create thumbnails */
+      /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+      function getthumbnails($file, $options = []) {
+        $thumbnails = [];
+        $heights = c::get('thumbs.heights');
+        foreach($heights as $height):
+          $id = 'h' . $height;
+          $options['height'] = $height;
+          $thumbnails[$id] = (string)$file->thumb($options)->url();
+        endforeach;
+        return $thumbnails;
+      }
+
+      /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
       /* !The echo */
       /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-      if(!get('structure')):
-        $json->site = getsite();
-        $json->pages = getpages(site()->pages());
-      elseif(get('path')):
+      if(get('path')):
         if($page = site()->pages()->findByURI(get('path'))):
           $json->page = getpage($page);
         endif;
-      elseif(get('structure')):
-       $home = c::get('home');
-       if($page = site()->pages()->find($home)):
-          $json->page = getpage($page);
-       endif;
+      endif;
+
+      if($loadstructure):
+        $json->site = getsite();
+        $json->pages = getpages(site()->pages());
       endif;
 
       $after = microtime(true);
