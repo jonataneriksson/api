@@ -349,7 +349,7 @@ array(
 
       function getthumbnails($file, $options = []) {
         $thumbnails = [];
-        $heights = c::get('thumbs.heights');
+        $heights = c::get('thumbs.heights') ? c::get('thumbs.heights') : ['360', '720', '1080'];
         foreach($heights as $height):
           $id = 'h' . $height;
           $options['height'] = $height;
