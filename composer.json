@@ -1,5 +1,5 @@
 {
-    "name": "jonataneriksson/kirby-cms-json-api",
+    "name": "jonataneriksson/kirby-json",
     "description": "Kirby CMS content as JSON API object.",
     "version" : "0.2.0",
     "type": "kirby-plugin",
