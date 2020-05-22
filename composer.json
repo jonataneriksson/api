@@ -11,11 +11,6 @@
             "homepage": "https://tsto.org"
         }
     ],
-    "support": {
-        "email": "jonatan@tsto.org",
-        "issues": "https://github.com/jonataneriksson/vuekit/issues",
-        "source": "https://github.com/jonataneriksson/vuekit/"
-    },
     "minimum-stability": "stable",
     "require": {
         "getkirby/cms": "^3.0",
