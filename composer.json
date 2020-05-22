@@ -1,0 +1,22 @@
+{
+    "name": "jonataneriksson/kirby-cms-json-api",
+    "description": "Kirby CMS content as JSON API object.",
+    "version" : "0.2.0",
+    "type": "kirby-plugin",
+    "homepage": "https://tsto.org",
+    "authors": [
+        {
+            "name": "Jonatan Eriksson",
+            "email": "jonatan@tsto.org",
+            "homepage": "https://tsto.org"
+        }
+    ],
+    "support": {
+        "email": "jonatan@tsto.org",
+        "issues": "https://github.com/jonataneriksson/vuekit/issues",
+        "source": "https://github.com/jonataneriksson/vuekit/"
+    },
+    "require": {
+        "php": ">=7.1.0",
+    }
+}
