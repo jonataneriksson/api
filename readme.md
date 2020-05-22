@@ -1,15 +1,10 @@
-# Kirby api Plugin
+# Simple Kirby JSON API Plugin
 
-Load Kirby CMS pages and contents as a JSON object.
+Load Kirby CMS pages and contents as a JSON object at /json?
 
 ## Requirements
 
-Kirby CMS, PHP5/PHP7
-
-## Installation
-
-Kirby CLI:
-> kirby plugin:install jonataneriksson/api
+Kirby 3 CMS PHP7
 
 ## License
 
