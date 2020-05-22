@@ -16,6 +16,7 @@
         "issues": "https://github.com/jonataneriksson/vuekit/issues",
         "source": "https://github.com/jonataneriksson/vuekit/"
     },
+    "minimum-stability": "stable",
     "require": {
         "getkirby/cms": "^3.0",
         "php": ">=7.1.0"
